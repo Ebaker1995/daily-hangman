@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 
 
 // Function to return the hangman drawing based on incorrect guesses (lives left)
@@ -130,7 +131,7 @@ function Hangman() {
 
   // Check if the game is over (either win or loss)
   useEffect(() => {
-    if (lives === 0) {
+    if (lives === 0) { //LOST GAME
       setGameOver(true);
       setGameWon(false);
       localStorage.setItem('gameCompletedDate', new Date().toLocaleDateString()); // Mark game as completed
@@ -141,7 +142,8 @@ function Hangman() {
       });
       
       setCanPlay(false);
-    } else if (word.split('').every((letter) => guessedLetters.includes(letter))) {
+    } else if (word.split('').every((letter) => guessedLetters.includes(letter))) { // WON GAME
+
       setGameOver(true);
       setGameWon(true);
       localStorage.setItem('gameCompletedDate', new Date().toLocaleDateString()); // Mark game as completed
@@ -237,14 +239,25 @@ function Hangman() {
           )}
           <p>The word was: {word}</p>
           <button className="share-button" onClick={shareResult}>Share Result</button>
+          
         </div>
       )}
 
       {/* If game is already completed today */}
       {!canPlay && <p>You've already played today!</p>}
-      <button className="share-button" onClick={shareResult}>Share Result</button>
+      
+      
       {/* Display statistics */}
       {getStatistics()}
+      <button
+        onClick={() => {
+          
+          setCanPlay(true);
+        }}
+      >
+        Simulate Next Day
+      </button>
+      console.log({lives});
     </div>
   );
 }
