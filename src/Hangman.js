@@ -132,7 +132,12 @@ function Hangman() {
   // Check if the game is over (either win or loss)
   useEffect(() => {
     if (lives === 0) { //LOST GAME
+      const guessedWord = word.split('').map((letter) => (guessedLetters.includes(letter) ? letter : '_')).join(' ')
       setGameOver(true);
+      Cookies.set('lives', lives,);
+      Cookies.set("lost", true)
+      Cookies.set('guessedLetters', guessedLetters)
+      Cookies.set('guessedWord', guessedWord)
       setGameWon(false);
       localStorage.setItem('gameCompletedDate', new Date().toLocaleDateString()); // Mark game as completed
       setStats((prevStats) => {
@@ -140,10 +145,14 @@ function Hangman() {
         saveStatsToLocalStorage(updatedStats); // Save updated stats to localStorage
         return updatedStats;
       });
-      
+
       setCanPlay(false);
     } else if (word.split('').every((letter) => guessedLetters.includes(letter))) { // WON GAME
-
+      const guessedWord = word.split('').map((letter) => (guessedLetters.includes(letter) ? letter : '_')).join(' ')
+      Cookies.set('lives', lives,);
+      Cookies.set("won", true)
+      Cookies.set('guessedLetters', guessedLetters)
+      Cookies.set('guessedWord', guessedWord)
       setGameOver(true);
       setGameWon(true);
       localStorage.setItem('gameCompletedDate', new Date().toLocaleDateString()); // Mark game as completed
@@ -163,6 +172,12 @@ function Hangman() {
       setLives(6); // Reset lives
       setGameOver(false); // Reset gameOver status
       setGameWon(false); // Reset game won status
+      Cookies.remove('lives');
+      Cookies.remove('lost');
+      Cookies.remove('won');
+
+      Cookies.remove('guessedLetters');
+      Cookies.remove('guessedWord')
     };
 
     // Set an interval to update the word at midnight
@@ -191,6 +206,8 @@ function Hangman() {
     navigator.clipboard.writeText(resultText).then(() => {
       alert('Result copied to clipboard!');
     });
+
+    
     
   };
 
@@ -198,69 +215,138 @@ function Hangman() {
 
   // Fetch and return the play, win, and loss statistics
   const getStatistics = () => {
+    
+    
     return (
+      
       <div className="stats">
         <h3>Statistics</h3>
         <p>Days Played: {stats.played}</p>
         <p>Wins: {stats.wins}</p>
         <p>Losses: {stats.losses}</p>
+        
+        
       </div>
     );
   };
 
-  return (
-    <div className="App">
-      
-      <pre>{getHangmanDrawing(lives)}</pre>
-      <p>Word: {word.split('').map((letter) => (guessedLetters.includes(letter) ? letter : '_')).join(' ')}</p>
-      <p>Lives: {renderHearts(lives)}</p>
-      <p>Guessed Letters: {guessedLetters.join(', ')}</p>
+  if (canPlay) { //Normal condition
+    
+    return (
+      <div className="App">
+        
+        <pre>{getHangmanDrawing(lives)}</pre>
+        <p>Word: {word.split('').map((letter) => (guessedLetters.includes(letter) ? letter : '_')).join(' ')}</p>
+        <p>Lives: {renderHearts(lives)}</p>
+        <p>Guessed Letters: {guessedLetters.join(', ')}</p>
 
-      {/* Keyboard */}
-      <div className="keyboard">
-        {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter) => (
-          <button
-            key={letter}
-            onClick={() => onLetterClick(letter)}
-            disabled={guessedLetters.includes(letter) || gameOver || !canPlay}
-          >
-            {letter}
-          </button>
-        ))}
-      </div>
-
-      {/* Game Over / Win Screen */}
-      {gameOver && (
-        <div className="result">
-          {gameWon ? (
-            <h2>Congratulations, You Won!</h2>
-          ) : (
-            <h2>Game Over! You Lost</h2>
-          )}
-          <p>The word was: {word}</p>
-          <button className="share-button" onClick={shareResult}>Share Result</button>
-          
+        {/* Keyboard */}
+        <div className="keyboard">
+          {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter) => (
+            <button
+              key={letter}
+              onClick={() => onLetterClick(letter)}
+              disabled={guessedLetters.includes(letter) || gameOver || !canPlay}
+            >
+              {letter}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* If game is already completed today */}
-      {!canPlay && <p>You've already played today!</p>}
+        {/* Game Over / Win Screen */}
+        {gameOver && (
+          <div className="result">
+            {gameWon ? (
+              <h2>Congratulations, You Won!</h2>
+            ) : (
+              <h2>Game Over! You Lost</h2>
+            )}
+            <p>The word was: {word}</p>
+
+            <button className="share-button" onClick={shareResult}>Share Result</button>
+            
+            
+          </div>
+        )}
+
+        {/* If game is already completed today */}
+        {!canPlay && <p>You've already played today!</p>}
+
+        {/* <button className="share-button" onClick={shareResult}>Share Result</button> */}
+        
+        
+        {/* Display statistics */}
+        {getStatistics()}
+        
+        
+      </div>
+    );
+  }
+
+  if (!canPlay) { //Game has already been beat today
+
+    const cookiesLives = Cookies.get('lives')
+  
+    const cookiesLost = Cookies.get('lost')
+
+    const cookiesGuessed = Cookies.get('guessedLetters')
+
+    const cookiesGuessedWord = Cookies.get('guessedWord')
+
       
+    
+    return (
+      <div className="App">
+
       
-      {/* Display statistics */}
-      {getStatistics()}
-      <button
-        onClick={() => {
-          
-          setCanPlay(true);
-        }}
-      >
-        Simulate Next Day
-      </button>
-      console.log({lives});
-    </div>
-  );
-}
+        
+        <pre>{getHangmanDrawing(cookiesLives)}</pre>
+        <p>Word: {cookiesGuessedWord}</p>
+        <p>Lives: {renderHearts(cookiesLives)}</p>
+        <p>Guessed Letters: {cookiesGuessed}</p>
+
+        {/* Keyboard */}
+        <div className="keyboard">
+          {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter) => (
+            <button
+              key={letter}
+              onClick={() => onLetterClick(letter)}
+              disabled={guessedLetters.includes(letter) || gameOver || !canPlay}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+
+        {/* Game Over / Win Screen */}
+        {
+          <div className="result">
+            {!cookiesLost ? (
+              <h2>Congratulations, You Won!</h2>
+            ) : (
+              <h2>Game Over! You Lost</h2>
+            )}
+            <p>The word was: {word}</p>
+
+            <button className="share-button" onClick={shareResult}>Share Result</button>
+            
+            
+          </div>
+        }
+
+        {/* If game is already completed today */}
+        {!canPlay && <p>You've already played today!</p>}
+
+        {/* <button className="share-button" onClick={shareResult}>Share Result</button> */}
+        
+        
+        {/* Display statistics */}
+        {getStatistics()}
+        
+        
+      </div>
+    );
+  }}
 
 // Keyboard Component to render letter buttons
 const Keyboard = ({ guessedLetters, onLetterClick }) => {
